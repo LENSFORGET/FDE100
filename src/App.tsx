@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { BookOpen, ExternalLink, Menu, X } from "lucide-react";
 import { cases, pdfUrl } from "./model";
 import { useReading } from "./state";
@@ -7,6 +7,7 @@ import { Library } from "./components/Library";
 import { Reader } from "./components/Reader";
 import { Guide, LearningPath, About, NotFound } from "./components/Guide";
 import { Compare } from "./components/Compare";
+const MindMap = lazy(() => import("./components/map/MindMap"));
 export default function App() {
   const [route, setRoute] = useState(location.hash.slice(1) || "/");
   const [menu, setMenu] = useState(false);
@@ -49,8 +50,15 @@ export default function App() {
     });
   }
   const id = Number(route.split("/")[2]);
+  const isMap = route === "/map" || route.startsWith("/map?");
   let content;
-  if (route === "/" || route === "") content = <Home reading={reading} />;
+  if (isMap)
+    content = (
+      <Suspense fallback={<div className="empty">正在展开报告结构…</div>}>
+        <MindMap reading={reading} />
+      </Suspense>
+    );
+  else if (route === "/" || route === "") content = <Home reading={reading} />;
   else if (route === "/cases" || route === "/reading")
     content = (
       <Library
@@ -92,6 +100,7 @@ export default function App() {
           </a>
           <nav className={`main-nav ${menu ? "open" : ""}`} aria-label="主导航">
             {[
+              ["/map", "结构地图"],
               ["/guide", "报告导读"],
               ["/cases", "案例库"],
               ["/reading", "我的阅读"],
@@ -136,34 +145,36 @@ export default function App() {
           {notice}
         </div>
       )}
-      <footer className="site-footer">
-        <div className="footer-inner">
-          <p>
-            基于
-            Datawhale《FDE案例100》整理的独立导读。原报告与案例内容归相应权利人所有。
-          </p>
-          <div>
-            <span>让经验更容易被理解，也更容易被使用。</span>
-            <nav aria-label="页脚导航">
-              <a href="#/about">来源与说明</a>
-              <a
-                href="https://github.com/LENSFORGET/FDE100"
-                target="_blank"
-                rel="noreferrer"
-              >
-                GitHub <ExternalLink size={12} />
-              </a>
-              <a
-                href="https://fde100.datawhale.cn/cases"
-                target="_blank"
-                rel="noreferrer"
-              >
-                Datawhale 官网 <ExternalLink size={12} />
-              </a>
-            </nav>
+      {!isMap && (
+        <footer className="site-footer">
+          <div className="footer-inner">
+            <p>
+              基于
+              Datawhale《FDE案例100》整理的独立导读。原报告与案例内容归相应权利人所有。
+            </p>
+            <div>
+              <span>让经验更容易被理解，也更容易被使用。</span>
+              <nav aria-label="页脚导航">
+                <a href="#/about">来源与说明</a>
+                <a
+                  href="https://github.com/LENSFORGET/FDE100"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  GitHub <ExternalLink size={12} />
+                </a>
+                <a
+                  href="https://fde100.datawhale.cn/cases"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Datawhale 官网 <ExternalLink size={12} />
+                </a>
+              </nav>
+            </div>
           </div>
-        </div>
-      </footer>
+        </footer>
+      )}
     </>
   );
 }

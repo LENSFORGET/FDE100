@@ -4,9 +4,12 @@
 
 **在线阅读：[lensforget.github.io/FDE100](https://lensforget.github.io/FDE100/)**
 
+**交互样品：[全景知识地图](https://lensforget.github.io/FDE100/#/map)**。从五类业务问题进入24个案例，逐层展开痛点、实施、结果和边界。点击「播放导览」体验约一分钟的动态讲解。
+
 ## 内容与功能
 
 - 本版 PDF 全部 **24 个案例**，每篇有问题、实施步骤、结果、边界与讨论问题。
+- 全景知识地图：拖动与指针定位缩放、双指缩放、分支折叠、案例结构、搜索定位、缩略图和可暂停导览。手机从五个分支逐层进入；支持 `#/map?case=6` 分享单个案例。
 - **144 组访谈问答**，附对应 PDF 页码，内置本版报告。
 - 按业务问题、行业、项目阶段和原文关键词查找。
 - 初学、项目实践、分享准备三条阅读路线。
@@ -46,6 +49,8 @@ npm run preview
 - `public/report.pdf`：本版源报告；`public/report-cover.jpg`：从原报告第一页渲染的封面。
 - `docs/SOURCES.md`：来源、官网映射与范围差异。
 - `docs/DESIGN.md`：设计方向与样式约束。
+- `src/components/map/mapData.ts`：地图的短语节点、阅读分类和导览脚本；来自本版案例的导读整理。
+- `docs/MAP-PROTOTYPE.md`：交互地图样品的构图和操作说明。
 
 重新提取：
 
