@@ -4,6 +4,38 @@ import fs from "node:fs";
 const cases = JSON.parse(
   fs.readFileSync(new URL("../src/data/cases.json", import.meta.url)),
 );
+const takeaways = JSON.parse(
+  fs.readFileSync(new URL("../src/data/takeaways.json", import.meta.url)),
+);
+test("every editorial takeaway has a verifiable phrase in its cited source question", () => {
+  assert.deepEqual(
+    takeaways.map((t) => t.id),
+    cases.map((c) => c.id),
+  );
+  for (const t of takeaways) {
+    const c = cases[t.id - 1];
+    const source = c.qa.find((q) => q.number === t.sourceQ);
+    assert.ok(source, `Case ${t.id}: source question exists`);
+    assert.ok(
+      source.paragraphs.some((p) => p.includes(t.sourcePhrase)),
+      `Case ${t.id}: source anchor must match the report verbatim`,
+    );
+    for (const term of t.emphasis) {
+      const readingText = [
+        c.summary,
+        c.problem,
+        ...c.steps,
+        c.outcome,
+        c.boundary,
+        c.lesson,
+      ].join("\n");
+      assert.ok(
+        readingText.includes(term),
+        `Case ${t.id}: highlighted phrase ${term} must preserve the existing text`,
+      );
+    }
+  }
+});
 test("24 report cases retain contiguous printed/PDF page mappings and six source questions", () => {
   assert.equal(cases.length, 24);
   for (const [i, c] of cases.entries()) {

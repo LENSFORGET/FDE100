@@ -1,6 +1,8 @@
 import { ArrowUpRight, Bookmark, Check, Plus } from "lucide-react";
 import type { Case } from "../model";
 import type { Reading } from "../state";
+import { takeawayFor } from "../insights";
+import { shortCases } from "./map/mapData";
 export function CaseCard({
   item,
   reading,
@@ -15,6 +17,7 @@ export function CaseCard({
   featured?: boolean;
 }) {
   const saved = reading.state.saved.includes(item.id);
+  const takeaway = takeawayFor(item.id);
   return (
     <article
       className={`case-card ${featured ? "featured" : ""} tone-${item.id % 4}`}
@@ -34,12 +37,17 @@ export function CaseCard({
         </button>
       </div>
       <a className="card-link" href={`#/case/${item.id}`}>
-        <h3>{featured ? item.title : item.name}</h3>
-        <p>{item.summary}</p>
+        <h3>{item.name}</h3>
+        <p className="card-takeaway">
+          <span>最值得学</span>
+          <strong>{takeaway.headline}</strong>
+        </p>
+        <p className="card-description">{item.summary}</p>
         <div className="card-metric">
           <strong>{item.metric}</strong>
           <span>{item.metricLabel}</span>
         </div>
+        <p className="card-boundary">{shortCases[item.id - 1][5]}</p>
         <div className="card-bottom">
           <span>
             {item.status}

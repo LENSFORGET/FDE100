@@ -9,6 +9,7 @@ import { cases, pdfUrl } from "../../model";
 import type { Reading } from "../../state";
 import { groupFor, groups } from "./mapData";
 import type { GraphNode } from "./mapData";
+import { takeawayFor } from "../../insights";
 export function MapInspector({
   node,
   caseId,
@@ -30,23 +31,27 @@ export function MapInspector({
       : null;
   const phase = node.section || "problem";
   const q =
-    phase === "problem"
-      ? 1
-      : phase === "solution"
-        ? 3
-        : phase === "result"
-          ? 4
-          : 5;
-  const text = c
-    ? node.step !== undefined
-      ? c.steps[node.step]
+    node.kind === "focus"
+      ? 6
       : phase === "problem"
-        ? c.problem
+        ? 1
         : phase === "solution"
-          ? c.summary
+          ? 3
           : phase === "result"
-            ? c.outcome
-            : c.boundary
+            ? 4
+            : 5;
+  const text = c
+    ? node.kind === "focus"
+      ? takeawayFor(c.id).why
+      : node.step !== undefined
+        ? c.steps[node.step]
+        : phase === "problem"
+          ? c.problem
+          : phase === "solution"
+            ? c.summary
+            : phase === "result"
+              ? c.outcome
+              : c.boundary
     : "";
   const saved = c ? reading.state.saved.includes(c.id) : false;
   return (
@@ -103,7 +108,7 @@ export function MapInspector({
           </div>
           <div className="inspector-actions">
             <a href={`#/case/${c.id}`} className="map-text-action">
-              读完整案例 <ArrowUpRight size={16} />
+              读案例重点 <ArrowUpRight size={16} />
             </a>
             <button
               className={`map-icon ${saved ? "is-saved" : ""}`}

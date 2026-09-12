@@ -15,14 +15,20 @@ export function Library({
   mine = false,
   compare,
   onCompare,
+  initialTopic = "全部",
+  initialQuery = "",
 }: {
   reading: Reading;
   mine?: boolean;
   compare: number[];
   onCompare: (id: number) => void;
+  initialTopic?: string;
+  initialQuery?: string;
 }) {
-  const [query, setQuery] = useState("");
-  const [topic, setTopic] = useState("全部");
+  const [query, setQuery] = useState(initialQuery);
+  const [topic, setTopic] = useState(
+    topics.includes(initialTopic) ? initialTopic : "全部",
+  );
   const [industry, setIndustry] = useState("全部行业");
   const [status, setStatus] = useState("全部阶段");
   const [shelf, setShelf] = useState("收藏");
@@ -62,9 +68,20 @@ export function Library({
         <p>
           {mine
             ? `已读 ${reading.state.read.length} / 24 篇。收藏、笔记和进度保存在当前浏览器。`
-            : "按问题找案例，按原文理解结果。24 篇详细导读，随时回到报告。"}
+            : "先看每篇最值得学的部分，再展开方法、结果与原文。也可以选两个案例，一起比较。"}
         </p>
       </div>
+      {!mine && (
+        <div className="library-orientation">
+          <a href="#/map">
+            用地图看全貌 <ArrowRight size={14} />
+          </a>
+          <a href="#/insights">
+            先读六条精华 <ArrowRight size={14} />
+          </a>
+          <span>卡片先看方法 · 打开读重点 · 选择两个可比较</span>
+        </div>
+      )}
       {mine && reading.state.last && (
         <div className="path-progress">
           <span>上次读到：{cases[reading.state.last - 1].name}</span>

@@ -1,4 +1,5 @@
 import rawCases from "./data/cases.json";
+import { takeawayFor } from "./insights";
 export const cases = rawCases;
 export type Case = (typeof cases)[number];
 export const pdfUrl = (page?: number) =>
@@ -38,7 +39,8 @@ export const routes = [
   },
 ];
 export function talkText(c: Case) {
-  return `# ${c.name}｜讲解提纲\n\n建议讲解约 3 分钟；以下为本站基于报告整理的讲解建议。\n\n## 开场：原来的问题\n${c.problem}\n\n## 展开：怎么做\n${c.steps.map((s, i) => `${i + 1}. ${s}`).join("\n")}\n\n## 结果：发生了什么\n${c.outcome}\n\n## 边界：不能过度解读什么\n${c.boundary}\n\n## 结尾：可以迁移的经验\n${c.lesson}\n\n## 讨论\n${c.question}\n\n来源：Datawhale《FDE案例100》，2026年9月6日，NO.${c.id}，印刷页 ${c.printedStart}–${c.printedEnd}，PDF 第 ${c.pdfStart}–${c.pdfEnd} 页。\n${c.official ? `对应官网：https://fde100.datawhale.cn/cases/cases-${String(c.official).padStart(3, "0")}\n` : ""}\n案例数据为报告受访者陈述，非本站独立审计。\n`;
+  const takeaway = takeawayFor(c.id);
+  return `# ${c.name}｜讲解提纲\n\n建议讲解约 3 分钟；以下为本站基于报告整理的讲解建议。\n\n## 最值得学\n**${takeaway.headline}**\n\n${takeaway.why}\n\n## 开场：原来的问题\n${c.problem}\n\n## 展开：怎么做\n${c.steps.map((s, i) => `${i + 1}. ${s}`).join("\n")}\n\n## 结果：发生了什么\n${c.outcome}\n\n## 边界：不能过度解读什么\n${c.boundary}\n\n## 结尾：可以迁移的经验\n${c.lesson}\n\n## 行动建议\n${takeaway.action}\n\n## 讨论\n${c.question}\n\n来源：Datawhale《FDE案例100》，2026年9月6日，NO.${c.id}，印刷页 ${c.printedStart}–${c.printedEnd}，PDF 第 ${c.pdfStart}–${c.pdfEnd} 页。重点总结依据 Q${takeaway.sourceQ}，PDF 第 ${c.qa[takeaway.sourceQ - 1].pdfPage} 页起。\n${c.official ? `对应官网：https://fde100.datawhale.cn/cases/cases-${String(c.official).padStart(3, "0")}\n` : ""}\n案例数据为报告受访者陈述，非本站独立审计。\n`;
 }
 export function download(
   name: string,

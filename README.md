@@ -1,20 +1,23 @@
 # FDE100 导读
 
-让 Datawhale《FDE案例100》更容易理解、讲解和使用的独立阅读网站。
+让 Datawhale《FDE案例100》更容易理解、讲解和使用的独立互动导读网站。
 
 **在线阅读：[lensforget.github.io/FDE100](https://lensforget.github.io/FDE100/)**
 
-**交互样品：[全景知识地图](https://lensforget.github.io/FDE100/#/map)**。从五类业务问题进入24个案例，逐层展开痛点、实施、结果和边界。点击「播放导览」体验约一分钟的动态讲解。
+从首页直接选择：[看全景地图](https://lensforget.github.io/FDE100/#/map)、[读六条精华](https://lensforget.github.io/FDE100/#/insights)、[找案例](https://lensforget.github.io/FDE100/#/cases)或[准备分享](https://lensforget.github.io/FDE100/#/path/share)。引用来源与 GitHub 仓库在首页直接展示。
 
 ## 内容与功能
 
 - 本版 PDF 全部 **24 个案例**，每篇有问题、实施步骤、结果、边界与讨论问题。
+- 每篇默认展示**重点速读**：最值得学的方法、短结构、结果边界和行动建议；可切换完整解读、讲解提纲、访谈原文。关键短语加粗，原文措辞保留。
+- 六条跨案例精华，可切换阅读并核对案例与 PDF 来源；提供24篇重点索引和搜索。
 - 全景知识地图：拖动与指针定位缩放、双指缩放、分支折叠、案例结构、搜索定位、缩略图和可暂停导览。手机从五个分支逐层进入；支持 `#/map?case=6` 分享单个案例。
 - **144 组访谈问答**，附对应 PDF 页码，内置本版报告。
 - 按业务问题、行业、项目阶段和原文关键词查找。
 - 初学、项目实践、分享准备三条阅读路线。
 - 两个案例并排比较，导出比较与讲解提纲。
 - 每篇提供讲解提纲、连贯讲稿和 Markdown 下载。
+- 分享路线支持下载整组三案例提纲，并直接打开各篇讲稿。
 - 收藏、已读、笔记与阅读记录导出，仅保存在当前浏览器。
 - 桌面与手机自适应，键盘焦点、减少动效支持。
 
@@ -45,6 +48,8 @@ npm run preview
 
 - `src/data/editorial.json`：24 篇人工整理式导读数据；解读与原文分别存储。
 - `src/data/cases.json`：已提交的完整阅读数据，包括访谈和问答起始页码。
+- `src/data/takeaways.json`：24篇重点、行动建议、原文短语定位与加粗词组。`npm test` 会核对每条定位与加粗文本确实存在于原资料。
+- `src/insights.ts`：六条跨案例经验及关联案例；这些是本站归纳，不是官方评分。
 - `scripts/import-report.py`：从本版 PDF 重新提取内容，需要 `pypdf`。
 - `public/report.pdf`：本版源报告；`public/report-cover.jpg`：从原报告第一页渲染的封面。
 - `docs/SOURCES.md`：来源、官网映射与范围差异。

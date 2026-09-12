@@ -1,18 +1,22 @@
 import { ArrowLeft, Download } from "lucide-react";
 import { cases, talkText, download } from "../model";
 import { NotFound } from "./Guide";
+import { takeawayFor } from "../insights";
+import { Emphasis } from "./Emphasis";
 export function Compare({ ids }: { ids: number[] }) {
   const items = ids.map((id) => cases.find((c) => c.id === id));
   if (ids.length !== 2 || ids[0] === ids[1] || items.some((c) => !c))
     return <NotFound />;
   const [a, b] = items as [(typeof cases)[number], (typeof cases)[number]];
   const rows = [
+    ["最值得学", takeawayFor(a.id).headline, takeawayFor(b.id).headline],
     ["业务问题", a.problem, b.problem],
     ["实施步骤", a.steps.join("\n"), b.steps.join("\n")],
     ["项目阶段", a.status, b.status],
     ["报告反馈", a.outcome, b.outcome],
     ["结果边界", a.boundary, b.boundary],
     ["借鉴经验", a.lesson, b.lesson],
+    ["可以尝试", takeawayFor(a.id).action, takeawayFor(b.id).action],
     ["讨论问题", a.question, b.question],
     [
       "报告出处",
@@ -52,8 +56,12 @@ export function Compare({ ids }: { ids: number[] }) {
             {rows.map(([label, x, y]) => (
               <tr key={label}>
                 <th scope="row">{label}</th>
-                <td>{x}</td>
-                <td>{y}</td>
+                <td>
+                  <Emphasis text={x} terms={takeawayFor(a.id).emphasis} />
+                </td>
+                <td>
+                  <Emphasis text={y} terms={takeawayFor(b.id).emphasis} />
+                </td>
               </tr>
             ))}
           </tbody>

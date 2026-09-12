@@ -4,8 +4,10 @@ import {
   BookOpen,
   ArrowRight,
   ExternalLink,
+  Download,
+  Layers,
 } from "lucide-react";
-import { cases, routes, pdfUrl } from "../model";
+import { cases, routes, pdfUrl, download, talkText } from "../model";
 import type { Reading } from "../state";
 import { CaseCard } from "./CaseCard";
 export function Guide() {
@@ -39,18 +41,23 @@ export function Guide() {
     <main className="guide-page">
       <header className="guide-hero">
         <h1>
-          一份报告，
+          认识 FDE，
           <br />
-          读懂落地的全过程。
+          从它解决的问题开始。
         </h1>
         <p>
           FDE 站在技术与业务之间，和企业一起发现问题、
           <br className="desktop-break" />
           构建方案、验证价值，并把能力留在组织里。
         </p>
-        <a className="button primary" href="#/path/start">
-          从三个案例开始 <ChevronRight size={17} />
-        </a>
+        <div className="guide-start-actions">
+          <a className="button primary" href="#/map?tour=1">
+            <Layers size={16} /> 用 1 分钟看全貌
+          </a>
+          <a className="text-link" href="#/insights">
+            读六条关键经验 <ChevronRight size={16} />
+          </a>
+        </div>
       </header>
       <div className="guide-content">
         <section>
@@ -204,9 +211,37 @@ export function LearningPath({
         返回首页
       </a>
       <div className="page-heading">
-        <h1>{path.title}</h1>
+        <h1>{pathId === "share" ? "选好案例，就能开始讲。" : path.title}</h1>
         <p>{path.description} 阅读时间为本站估计，可按自己的节奏展开原文。</p>
       </div>
+      {pathId === "share" && (
+        <div className="share-start">
+          <div>
+            <h2>一组案例，讲清三种结果。</h2>
+            <p>
+              车管所的项目反馈、物流的预期效果、图纸的初步产出。按这条线讲，也把各自的边界讲清楚。
+            </p>
+            <div className="share-case-links">
+              {path.ids.map((id) => (
+                <a key={id} href={`#/case/${id}?section=talk`}>
+                  {cases[id - 1].name}讲稿 <ChevronRight size={14} />
+                </a>
+              ))}
+            </div>
+          </div>
+          <button
+            className="button primary"
+            onClick={() =>
+              download(
+                "FDE100-三案例分享提纲.md",
+                `# FDE100 三案例分享\n\n建议从问题、做法、结果及边界讲起。以下为本站讲解建议。\n\n${path.ids.map((id) => talkText(cases[id - 1])).join("\n\n---\n\n")}`,
+              )
+            }
+          >
+            <Download size={16} /> 下载整组提纲
+          </button>
+        </div>
+      )}
       <div className="path-progress">
         <BookOpen size={20} />
         <span>

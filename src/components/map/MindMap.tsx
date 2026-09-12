@@ -64,8 +64,14 @@ export default function MindMap({ reading }: { reading: Reading }) {
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchIndex, setSearchIndex] = useState(0);
-  const [tour, setTour] = useState<number | null>(null);
-  const [playing, setPlaying] = useState(false);
+  const [tour, setTour] = useState<number | null>(() =>
+    new URLSearchParams(location.hash.split("?")[1]).get("tour") === "1"
+      ? 0
+      : null,
+  );
+  const [playing, setPlaying] = useState(
+    () => new URLSearchParams(location.hash.split("?")[1]).get("tour") === "1",
+  );
   const [toast, setToast] = useState("");
   const [reduceMotion, setReduceMotion] = useState(
     () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
@@ -148,8 +154,10 @@ export default function MindMap({ reading }: { reading: Reading }) {
       setCaseId(initialCase());
       setFocusedTopic(null);
       setSelected(null);
-      setTour(null);
-      setPlaying(false);
+      const startGuide =
+        new URLSearchParams(location.hash.split("?")[1]).get("tour") === "1";
+      setTour(startGuide ? 0 : null);
+      setPlaying(startGuide);
       setSearchOpen(false);
       setQuery("");
     };
