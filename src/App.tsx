@@ -16,6 +16,7 @@ import { Guide, LearningPath, About, NotFound } from "./components/Guide";
 import { Compare } from "./components/Compare";
 import { Insights } from "./components/Insights";
 import { sources } from "./sources";
+import { tourNarration } from "./components/map/tourNarration";
 const MindMap = lazy(() => import("./components/map/MindMap"));
 export default function App() {
   const [route, setRoute] = useState(location.hash.slice(1) || "/");
@@ -27,6 +28,7 @@ export default function App() {
   const params = new URLSearchParams(route.split("?")[1]);
   useEffect(() => {
     const changed = () => {
+      if (location.hash.split("?")[0] !== "#/map") tourNarration.stop();
       setRoute(location.hash.slice(1) || "/");
       setMenu(false);
       window.scrollTo({ top: 0, behavior: "instant" });
@@ -172,7 +174,23 @@ export default function App() {
           浏览器无法保存阅读记录。当前内容仍可使用，请及时导出笔记。
         </div>
       )}
-      <div id="main-content" tabIndex={-1}>
+      <div
+        id="main-content"
+        tabIndex={-1}
+        onClick={(event) => {
+          const link = (event.target as Element).closest("a");
+          if (
+            link?.getAttribute("href") === "#/map?tour=1" &&
+            !event.defaultPrevented &&
+            event.button === 0 &&
+            !event.metaKey &&
+            !event.ctrlKey &&
+            !event.shiftKey &&
+            !event.altKey
+          )
+            tourNarration.start();
+        }}
+      >
         {content}
       </div>
       {notice && (

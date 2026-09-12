@@ -5,6 +5,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
 } from "react";
 import type { CSSProperties } from "react";
 import {
@@ -14,6 +15,7 @@ import {
   BookOpen,
   ChartNoAxesCombined,
   Check,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Focus,
@@ -28,6 +30,7 @@ import {
   Search,
   Sparkles,
   Users,
+  Volume2,
   Workflow,
   X,
 } from "lucide-react";
@@ -39,6 +42,9 @@ import type { GraphNode } from "./mapData";
 import { useCamera } from "./useCamera";
 import { MapInspector } from "./MapInspector";
 import { GraphEdges, MiniMap } from "./MapVisuals";
+import tourScript from "../../data/tour-script.json";
+import { tourNarration } from "./tourNarration";
+import type { TourLanguage } from "./tourPlayback.mjs";
 import "./mindmap.css";
 function initialCase() {
   const value = Number(
@@ -64,14 +70,18 @@ export default function MindMap({ reading }: { reading: Reading }) {
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchIndex, setSearchIndex] = useState(0);
-  const [tour, setTour] = useState<number | null>(() =>
-    new URLSearchParams(location.hash.split("?")[1]).get("tour") === "1"
-      ? 0
-      : null,
+  const tourOnEntry = useRef(
+    new URLSearchParams(location.hash.split("?")[1]).get("tour") === "1",
   );
-  const [playing, setPlaying] = useState(
-    () => new URLSearchParams(location.hash.split("?")[1]).get("tour") === "1",
+  const narration = useSyncExternalStore(
+    tourNarration.subscribe,
+    tourNarration.getSnapshot,
   );
+  const tour = narration.active ? narration.step : null;
+  const playing =
+    narration.status === "playing" || narration.status === "loading";
+  const english = narration.language === "en-US";
+  const captions = tourScript[narration.language].steps;
   const [toast, setToast] = useState("");
   const [reduceMotion, setReduceMotion] = useState(
     () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
@@ -138,6 +148,16 @@ export default function MindMap({ reading }: { reading: Reading }) {
     frame();
   }, [frame]);
   useEffect(() => {
+    if (tourOnEntry.current && !tourNarration.getSnapshot().active)
+      tourNarration.start();
+    const stop = () => tourNarration.stop();
+    window.addEventListener("pagehide", stop);
+    return () => {
+      window.removeEventListener("pagehide", stop);
+      tourNarration.stop();
+    };
+  }, []);
+  useEffect(() => {
     const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
     const change = () => setReduceMotion(preference.matches);
     preference.addEventListener("change", change);
@@ -156,8 +176,9 @@ export default function MindMap({ reading }: { reading: Reading }) {
       setSelected(null);
       const startGuide =
         new URLSearchParams(location.hash.split("?")[1]).get("tour") === "1";
-      setTour(startGuide ? 0 : null);
-      setPlaying(startGuide);
+      if (startGuide) {
+        if (!tourNarration.getSnapshot().active) tourNarration.start();
+      } else tourNarration.stop();
       setSearchOpen(false);
       setQuery("");
     };
@@ -192,15 +213,13 @@ export default function MindMap({ reading }: { reading: Reading }) {
     setSelected(step.node);
   }, [tour]);
   useEffect(() => {
-    if (!playing || tour === null) return;
-    const timer = setTimeout(() => {
-      if (tour === tourSteps.length - 1) {
-        setPlaying(false);
-        setToast("导览完成。现在可以自由探索。");
-      } else setTour(tour + 1);
-    }, 6500);
-    return () => clearTimeout(timer);
-  }, [playing, tour]);
+    if (narration.status === "ended")
+      setToast(
+        english
+          ? "Tour complete. Explore at your own pace."
+          : "导览完成。现在可以自由探索。",
+      );
+  }, [narration.status, english]);
   useEffect(() => {
     if (!searchOpen) return;
     const dismiss = (event: PointerEvent) => {
@@ -211,8 +230,7 @@ export default function MindMap({ reading }: { reading: Reading }) {
     return () => document.removeEventListener("pointerdown", dismiss);
   }, [searchOpen]);
   const stopTour = useCallback(() => {
-    setPlaying(false);
-    setTour(null);
+    tourNarration.stop();
     setSelected(null);
   }, []);
   function overview() {
@@ -276,18 +294,15 @@ export default function MindMap({ reading }: { reading: Reading }) {
   function startTour() {
     setSelected(null);
     setSearchOpen(false);
-    setTour(0);
-    setPlaying(true);
+    tourNarration.start();
   }
   function previousTour() {
     if (tour === null) return;
-    setPlaying(false);
-    setTour(Math.max(0, tour - 1));
+    tourNarration.seek(tour - 1);
   }
   function nextTour() {
     if (tour === null) return;
-    setPlaying(false);
-    setTour(Math.min(tourSteps.length - 1, tour + 1));
+    tourNarration.seek(tour + 1);
   }
   async function share() {
     try {
@@ -332,9 +347,10 @@ export default function MindMap({ reading }: { reading: Reading }) {
           return;
         }
       }
+      if ((event.target as Element).closest("button,a")) return;
       if (event.key === " " && tour !== null) {
         event.preventDefault();
-        setPlaying((p) => !p);
+        tourNarration.toggle();
       }
       if (tour !== null && event.key === "ArrowRight") {
         event.preventDefault();
@@ -799,18 +815,24 @@ export default function MindMap({ reading }: { reading: Reading }) {
           </button>
         </div>
         {tour !== null ? (
-          <div className="map-tour" data-map-ui="true" aria-label="结构导览">
+          <div
+            className="map-tour"
+            data-map-ui="true"
+            aria-label={english ? "Narrated tour" : "结构导览"}
+            lang={narration.language}
+          >
             <div className="tour-progress-track">
               {tourSteps.map((s, i) => (
                 <button
                   key={s.title}
                   className={i <= tour ? "completed" : ""}
-                  aria-label={`跳到第${i + 1}步：${s.title}`}
+                  aria-label={
+                    english
+                      ? `Go to step ${i + 1}: ${captions[i].title}`
+                      : `跳到第${i + 1}步：${s.title}`
+                  }
                   aria-current={i === tour ? "step" : undefined}
-                  onClick={() => {
-                    setPlaying(false);
-                    setTour(i);
-                  }}
+                  onClick={() => tourNarration.seek(i)}
                 />
               ))}
             </div>
@@ -820,46 +842,66 @@ export default function MindMap({ reading }: { reading: Reading }) {
                 {String(tourSteps.length).padStart(2, "0")}
               </span>
               <div>
-                <h2>{tourSteps[tour].title}</h2>
-                <p>{tourSteps[tour].text}</p>
+                <h2>{captions[tour].title}</h2>
+                <p>{captions[tour].text}</p>
               </div>
               <button
                 className="map-icon tour-close"
                 onClick={stopTour}
-                aria-label="退出导览"
+                aria-label={english ? "Exit tour" : "退出导览"}
               >
                 <X size={17} />
               </button>
             </div>
             <div className="tour-controls">
-              <span>跟着结构，一步步理解</span>
+              <label className="tour-language">
+                <Volume2 size={14} aria-hidden="true" />
+                <select
+                  aria-label="导览语言 / Tour language"
+                  value={narration.language}
+                  onChange={(event) =>
+                    tourNarration.setLanguage(
+                      event.target.value as TourLanguage,
+                    )
+                  }
+                >
+                  <option value="zh-CN" lang="zh-CN">
+                    简体中文 · 女声
+                  </option>
+                  <option value="en-US" lang="en-US">
+                    English · Female
+                  </option>
+                </select>
+                <ChevronDown size={11} aria-hidden="true" />
+              </label>
               <button
                 className="map-icon"
                 disabled={tour === 0}
                 onClick={previousTour}
-                aria-label="上一步讲解"
+                aria-label={english ? "Previous step" : "上一步讲解"}
               >
                 <ChevronLeft size={18} />
               </button>
               <button
                 className="tour-play"
-                onClick={() => {
-                  if (tour === tourSteps.length - 1 && !playing) {
-                    setTour(0);
-                  }
-                  setPlaying(!playing);
-                }}
+                onClick={() => tourNarration.toggle()}
                 aria-label={
                   playing
-                    ? "暂停导览"
-                    : tour === tourSteps.length - 1
-                      ? "重播导览"
-                      : "继续导览"
+                    ? english
+                      ? "Pause narration"
+                      : "暂停导览"
+                    : narration.status === "ended"
+                      ? english
+                        ? "Replay tour"
+                        : "重播导览"
+                      : english
+                        ? "Play narration"
+                        : "继续导览"
                 }
               >
                 {playing ? (
                   <Pause size={15} fill="currentColor" />
-                ) : tour === tourSteps.length - 1 ? (
+                ) : narration.status === "ended" ? (
                   <RotateCcw size={15} />
                 ) : (
                   <Play size={15} fill="currentColor" />
@@ -869,11 +911,22 @@ export default function MindMap({ reading }: { reading: Reading }) {
                 className="map-icon"
                 disabled={tour === tourSteps.length - 1}
                 onClick={nextTour}
-                aria-label="下一步讲解"
+                aria-label={english ? "Next step" : "下一步讲解"}
               >
                 <ChevronRight size={18} />
               </button>
             </div>
+            {narration.status === "blocked" || narration.status === "error" ? (
+              <p className="tour-audio-status" role="status">
+                {narration.status === "blocked"
+                  ? english
+                    ? "Press play to start the narration."
+                    : "点击播放，开始语音导览。"
+                  : english
+                    ? "Audio could not load. Press play to retry."
+                    : "音频暂时无法加载，点击播放重试。"}
+              </p>
+            ) : null}
           </div>
         ) : (
           !inspector && (

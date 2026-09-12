@@ -870,10 +870,46 @@
   margin-top: 14px;
   padding-top: 7px;
 }
-.tour-controls > span {
+.tour-language {
   margin-right: auto;
-  font-size: 9px;
-  color: #a1a8b1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  color: #547697;
+  flex-shrink: 0;
+}
+.tour-language select {
+  appearance: none;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #526071;
+  font: inherit;
+  font-size: 11px;
+  padding: 8px 20px 8px 23px;
+  cursor: pointer;
+}
+.tour-language select:hover {
+  background: #eef3f9;
+}
+.tour-language select:focus-visible {
+  outline: 2px solid #0071e3;
+  outline-offset: 2px;
+}
+.tour-language svg {
+  position: absolute;
+  pointer-events: none;
+  left: 3px;
+}
+.tour-language svg:last-child {
+  left: auto;
+  right: 3px;
+}
+.tour-audio-status {
+  font-size: 11px;
+  line-height: 1.5;
+  color: #697b8d;
+  margin: 7px 0 1px;
 }
 .tour-play {
   width: 30px;
@@ -1161,8 +1197,8 @@
   .tour-controls {
     margin-top: 10px;
   }
-  .tour-controls > span {
-    font-size: 8px;
+  .tour-language select {
+    font-size: 10px;
   }
   .tour-progress-track {
     margin-bottom: 13px;
